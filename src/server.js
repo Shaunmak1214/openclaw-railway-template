@@ -1252,6 +1252,7 @@ const proxy = httpProxy.createProxyServer({
   xfwd: true,
   proxyTimeout: 120_000,
   timeout: 120_000,
+  changeOrigin: true,
 });
 
 // Prevent proxy errors from crashing the wrapper.
@@ -1274,10 +1275,12 @@ proxy.on("error", (err, _req, res) => {
 
 proxy.on("proxyReq", (proxyReq, req, res) => {
   proxyReq.setHeader("Authorization", `Bearer ${OPENCLAW_GATEWAY_TOKEN}`);
+  proxyReq.setHeader("Origin", GATEWAY_TARGET);
 });
 
 proxy.on("proxyReqWs", (proxyReq, req, socket, options, head) => {
   proxyReq.setHeader("Authorization", `Bearer ${OPENCLAW_GATEWAY_TOKEN}`);
+  proxyReq.setHeader("Origin", GATEWAY_TARGET);
 });
 
 // Auto-inject token into /openclaw browser GET requests so the Control UI works
@@ -1403,7 +1406,13 @@ server.on("upgrade", async (req, socket, head) => {
     socket.destroy();
     return;
   }
-  proxy.ws(req, socket, head, { target: GATEWAY_TARGET });
+  proxy.ws(req, socket, head, {
+    target: GATEWAY_TARGET,
+    headers: {
+      Authorization: `Bearer ${OPENCLAW_GATEWAY_TOKEN}`,
+      Origin: GATEWAY_TARGET,
+    },
+  });
 });
 
 async function gracefulShutdown(signal) {
