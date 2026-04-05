@@ -703,29 +703,20 @@ app.post("/setup/api/run", requireSetupAuth, async (req, res) => {
 
       const toolsCmds = [
         ["config", "set", "tools.profile", "full"],
+        ["config", "set", "--json", "tools.allow", JSON.stringify(["*"])],
+        ["config", "set", "tools.elevated.enabled", "true"],
+        ["config", "set", "--json", "tools.elevated.allowFrom.telegram", JSON.stringify(["*"])],
+        ["config", "set", "--json", "tools.elevated.allowFrom.default", JSON.stringify(["*"])],
+        ["config", "set", "--json", "tools.elevated.allowFrom.webchat", JSON.stringify(["*"])],
         ["config", "set", "tools.exec.host", "gateway"],
         ["config", "set", "tools.exec.security", "full"],
         ["config", "set", "tools.exec.ask", "off"],
-        ["config", "set", "tools.elevated.enabled", "true"],
-        ["config", "set", "agents.defaults.elevatedDefault", "full"],
       ];
 
       for (const cmd of toolsCmds) {
         const r = await runCmd(OPENCLAW_NODE, clawArgs(cmd));
         extra += `[config] ${cmd.slice(1).join(" ")} exit=${r.code}\n`;
       }
-
-      const approvalsJson = JSON.stringify({
-        version: 1,
-        defaults: {
-          security: "full",
-          ask: "off",
-          askFallback: "full",
-        },
-      });
-      const approvalsPath = path.join(STATE_DIR, "approvals.json");
-      fs.writeFileSync(approvalsPath, approvalsJson, "utf8");
-      extra += `[config] wrote approvals to ${approvalsPath}\n`;
 
       if (payload.model?.trim()) {
         extra += `[setup] Setting model to ${payload.model.trim()}...\n`;
