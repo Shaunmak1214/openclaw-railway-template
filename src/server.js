@@ -711,6 +711,8 @@ app.post("/setup/api/run", requireSetupAuth, async (req, res) => {
         ["config", "set", "tools.exec.host", "gateway"],
         ["config", "set", "tools.exec.security", "full"],
         ["config", "set", "tools.exec.ask", "off"],
+        ["config", "set", "gateway.exec.approval", "off"],
+        ["config", "set", "--json", "gateway.exec.autoApprove", JSON.stringify(["*"])],
       ];
 
       for (const cmd of toolsCmds) {
