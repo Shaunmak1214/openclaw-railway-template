@@ -335,6 +335,12 @@ const setupRateLimiter = {
   },
 };
 
+function verifySetupPassword(candidate) {
+  const passwordHash = crypto.createHash("sha256").update(candidate).digest();
+  const expectedHash = crypto.createHash("sha256").update(SETUP_PASSWORD).digest();
+  return crypto.timingSafeEqual(passwordHash, expectedHash);
+}
+
 function requireSetupAuth(req, res, next) {
   if (!SETUP_PASSWORD) {
     return res
@@ -350,6 +356,15 @@ function requireSetupAuth(req, res, next) {
     return res.status(429).type("text/plain").send("Too many requests. Try again later.");
   }
 
+  // Allow token-based auth via query parameter (used by ClawNow embedded viewer)
+  const queryToken = req.query.setup_token;
+  if (typeof queryToken === "string" && queryToken.length > 0) {
+    if (verifySetupPassword(queryToken)) {
+      return next();
+    }
+    return res.status(401).send("Invalid setup token");
+  }
+
   const header = req.headers.authorization || "";
   const [scheme, encoded] = header.split(" ");
   if (scheme !== "Basic" || !encoded) {
@@ -359,10 +374,7 @@ function requireSetupAuth(req, res, next) {
   const decoded = Buffer.from(encoded, "base64").toString("utf8");
   const idx = decoded.indexOf(":");
   const password = idx >= 0 ? decoded.slice(idx + 1) : "";
-  const passwordHash = crypto.createHash("sha256").update(password).digest();
-  const expectedHash = crypto.createHash("sha256").update(SETUP_PASSWORD).digest();
-  const isValid = crypto.timingSafeEqual(passwordHash, expectedHash);
-  if (!isValid) {
+  if (!verifySetupPassword(password)) {
     res.set("WWW-Authenticate", 'Basic realm="OpenClaw Setup"');
     return res.status(401).send("Invalid password");
   }
