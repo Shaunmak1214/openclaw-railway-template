@@ -13,7 +13,7 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 RUN npm install -g openclaw@2026.4.2 clawhub@latest \
-  && npm install --prefix /usr/local/lib/node_modules/openclaw --no-save grammy @slack/web-api
+  && npm install --prefix /usr/local/lib/node_modules/openclaw --no-save --omit=dev --legacy-peer-deps grammy @slack/web-api
 
 # Backward-compatibility shim for older OPENCLAW_ENTRY values.
 RUN mkdir -p /openclaw \
