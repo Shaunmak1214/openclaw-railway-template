@@ -13,7 +13,7 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 RUN npm install -g --legacy-peer-deps \
-    openclaw@2026.4.2 \
+    openclaw@2026.5.4 \
     clawhub@latest \
     grammy \
     @slack/web-api \
